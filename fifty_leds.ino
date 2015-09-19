@@ -6,8 +6,8 @@ const int fender_right_pin = 7;
 const int gas_left_pin = 8;
 const int fender_left_pin = 9;
 const int gas_right_pin = 10;
-const int right_headlight_pin = 5;
-const int left_headlight_pin = 4;
+const int headlight_right_pin = 5;
+const int headlight_left_pin = 4;
 const int headlight_pin = 11;
 const int fork_right_pin = 12;
 const int swing_left_pin = 13;
@@ -20,6 +20,13 @@ const int seat_side_right_pin = 19;
 const int seat_down_right_pin = 20;
 const int seat_down_left_pin = 21;
 const int chain_pin = 22;
+
+const int turn_left_button = 28;
+const int turn_right_button = 25;
+const int street_button = 27;
+const int animation_button = 26;
+
+const int party_hard_button = 24;
 
 const int fender_left_length = 17;
 const int fender_right_length = 17;
@@ -37,8 +44,8 @@ const int chain_length = 24;
 const int rear_tire_length = 20;
 const int tail_left_length = 4;
 const int tail_right_length = 4;
-const int right_headlight_length = 12;
-const int left_headlight_length = 12;
+const int headlight_right_length = 12;
+const int headlight_left_length = 12;
 const int headlight_length = 10;
 
 CRGB fender_left_pixels[fender_left_length];
@@ -57,8 +64,8 @@ CRGB chain_pixels[chain_length];
 CRGB rear_tire_pixels[rear_tire_length];
 CRGB tail_left_pixels[tail_left_length];
 CRGB tail_right_pixels[tail_right_length];
-CRGB right_headlight_pixels[right_headlight_length];
-CRGB left_headlight_pixels[left_headlight_length];
+CRGB headlight_right_pixels[headlight_right_length];
+CRGB headlight_left_pixels[headlight_left_length];
 CRGB headlight_pixels[headlight_length];
 
 Strip fender_left = {fender_left_pixels, fender_left_length, fender_left_pin};
@@ -78,8 +85,8 @@ Strip rear_tire = {rear_tire_pixels, rear_tire_length, rear_tire_pin};
 Strip tail_left = {tail_left_pixels, tail_left_length, tail_left_pin};
 Strip tail_right = {tail_right_pixels, tail_right_length, tail_right_pin};
 Strip headlight = {headlight_pixels, headlight_length, headlight_pin};
-Strip right_headlight = {right_headlight_pixels, right_headlight_length, right_headlight_pin};
-Strip left_headlight = {left_headlight_pixels, left_headlight_length, left_headlight_pin};
+Strip headlight_right = {headlight_right_pixels, headlight_right_length, headlight_right_pin};
+Strip headlight_left = {headlight_left_pixels, headlight_left_length, headlight_left_pin};
 
 const int all_length = 19;
 Strip all_strips[all_length];
@@ -89,11 +96,11 @@ const int brake_length = 2;
 Strip brake_strips[brake_length];
 Group brake = {brake_strips, brake_length};
 
-const int left_length = 8;
+const int left_length = 10;
 Strip left_strips[left_length];
 Group left = {left_strips, left_length};
 
-const int right_length = 8;
+const int right_length = 9;
 Strip right_strips[right_length];
 Group right = {right_strips, right_length};
 
@@ -106,17 +113,59 @@ int saturation = 255;
 int brightness = 255;
 int counter = 0;
 
+const int dim = 70;
+
 int rand_strip = 0;
 int rand_pixel = 0;
 
+CRGB headlight_color = CRGB::Black;
+const CRGB headlight_on = CRGB::White;
+const CRGB headlight_off = CRGB::Black;
+
+const int turn_speed = 20;
+const int turn_blinks = 11;
+int turn_left_count = 0;
+int turn_right_count = 0;
+int turn_left_blink = 0;
+int turn_right_blink = 0;
+
+const int party_speed = 2;
+const int party_blinks = 30;
+int party_hard_count = 0;
+int party_hard_blink = 0;
+const CRGB party_on = CRGB::White;
+const CRGB party_off = CRGB::Black;
+CRGB party_hard_color = party_off;
+
+const CRGB turn_on = CRGB(255,40,0);
+const CRGB tail_on = CRGB::Red;
+const CRGB tail_off = CRGB::Black;
+CRGB tail_color = CRGB::Black;
+
+CRGB turn_left_color = CRGB::Black;
+CRGB turn_right_color = CRGB::Black;
+
+int animation = 0;
+bool animation_lock = false;
+
+int street_state = 0;
+bool street_lock = false;
+
 void setup() {
+
+    pinMode(party_hard_button, INPUT);
+    pinMode(animation_button, INPUT);
+    pinMode(street_button, INPUT);
+    pinMode(turn_right_button, INPUT);
+    pinMode(turn_left_button, INPUT);
+
     FastLED.addLeds<NEOPIXEL, fork_left_pin>(fork_left_pixels, fork_left_length);
     FastLED.addLeds<NEOPIXEL, fender_right_pin>(fender_right_pixels, fender_right_length);
     FastLED.addLeds<NEOPIXEL, gas_left_pin>(gas_left_pixels, gas_left_length);
     FastLED.addLeds<NEOPIXEL, fender_left_pin>(fender_left_pixels, fender_left_length);
     FastLED.addLeds<NEOPIXEL, gas_right_pin>(gas_right_pixels, gas_right_length);
-    FastLED.addLeds<NEOPIXEL, left_headlight_pin>(left_headlight_pixels, left_headlight_length);
-    FastLED.addLeds<NEOPIXEL, right_headlight_pin>(right_headlight_pixels, right_headlight_length);
+    FastLED.addLeds<NEOPIXEL, headlight_left_pin>(headlight_left_pixels, headlight_left_length);
+    FastLED.addLeds<NEOPIXEL, headlight_right_pin>(headlight_right_pixels, headlight_right_length);
     FastLED.addLeds<NEOPIXEL, headlight_pin>(headlight_pixels, headlight_length);
     FastLED.addLeds<NEOPIXEL, fork_right_pin>(fork_right_pixels, fork_right_length);
     FastLED.addLeds<NEOPIXEL, swing_left_pin>(swing_left_pixels, swing_left_length);
@@ -130,50 +179,53 @@ void setup() {
     FastLED.addLeds<NEOPIXEL, seat_down_left_pin>(seat_down_left_pixels, seat_down_left_length);
     FastLED.addLeds<NEOPIXEL, chain_pin>(chain_pixels, chain_length);
 
-    all_strips[0] = left_headlight;
-    all_strips[1] = right_headlight;
-    all_strips[2] = headlight;
-    all_strips[3] = fender_left;
-    all_strips[4] = fender_right;
-    all_strips[5] = fork_left;
-    all_strips[6] = fork_right;
+    all_strips[0] = headlight_left;
+    all_strips[1] = headlight;
+    all_strips[2] = headlight_right;
+    all_strips[3] = fork_left;
+    all_strips[4] = fork_right;
+    all_strips[5] = fender_left;
+    all_strips[6] = fender_right;
     all_strips[7] = gas_left;
     all_strips[8] = gas_right;
-    all_strips[9] = seat_side_left;
-    all_strips[10] = seat_side_right;
-    all_strips[11] = seat_down_left;
-    all_strips[12] = seat_down_right;
-    all_strips[13] = swing_left;
-    all_strips[14] = swing_right; 
-    all_strips[15] = chain;
-    all_strips[16] = rear_tire;
-    all_strips[17] = tail_left;
-    all_strips[18] = tail_right;
+    all_strips[9] = swing_left;
+    all_strips[10] = swing_right; 
+    all_strips[11] = chain;
+    all_strips[12] = rear_tire;
+    all_strips[13] = tail_left;
+    all_strips[14] = tail_right;
+    all_strips[15] = seat_side_left;
+    all_strips[16] = seat_side_right;
+    all_strips[17] = seat_down_left;
+    all_strips[18] = seat_down_right;
 
-    right_strips[0] = fender_right;
+    right_strips[0] = headlight_right;
     right_strips[1] = fork_right;
-    right_strips[2] = gas_right;
-    right_strips[3] = seat_side_right;
-    right_strips[4] = seat_down_right;
-    right_strips[5] = swing_right; 
-    right_strips[6] = rear_tire; 
-    right_strips[7] = tail_right;
+    right_strips[2] = fender_right;
+    right_strips[3] = gas_right;
+    right_strips[4] = swing_right; 
+    right_strips[5] = rear_tire; 
+    right_strips[6] = tail_right;
+    right_strips[7] = seat_side_right;
+    right_strips[8] = seat_down_right;
 
-    left_strips[0] = fender_left;
-    left_strips[1] = fork_left;
-    left_strips[2] = gas_left;
-    left_strips[3] = seat_side_left;
-    left_strips[4] = seat_down_left;
+    left_strips[0] = headlight;
+    left_strips[1] = headlight_left;
+    left_strips[2] = fork_left;
+    left_strips[3] = fender_left;
+    left_strips[4] = gas_left;
     left_strips[5] = swing_left;
     left_strips[6] = chain;
     left_strips[7] = tail_left;
+    left_strips[8] = seat_side_left;
+    left_strips[9] = seat_down_left;
 
     brake_strips[0] = tail_left;
     brake_strips[1] = tail_right;
 
-    headlights_strips[0] = left_headlight;
+    headlights_strips[0] = headlight_left;
     headlights_strips[1] = headlight;
-    headlights_strips[2] = right_headlight;
+    headlights_strips[2] = headlight_right;
 
 
     delay(1000); 
@@ -190,40 +242,166 @@ void loop() {
         rand_strip = random(0,all.length-1);
         rand_pixel = random(0,all.strips[rand_strip].length-1);
     }
-    //hue = 40;
-    //looks good, decent rolling rainbow
-    delay_strip(all, hue, saturation, brightness);
 
-    //similar to above, slight pixel shift
-    //delay_strip_and_pixel(all, hue, saturation, brightness, 12, 3);
+    switch (animation) {
+        case 0:
+            //nothing
+            write_group(all, CRGB::Black);
+            break;
+        case 1:
+            //Sparkles
+            write_group(all, CRGB::Black);
+            write_pixel(all, rand_strip, rand_pixel, CRGB::White);
+            break;
+        case 2:
+            write_group(all, CRGB(dim,dim,dim));
+            break;
+        case 3:
+            write_group(all, CRGB::White);
+            break;
+        case 4:
+            //rotate colors
+            write_group(all, CHSV(hue, saturation, brightness));
+            break;
+        case 5:
+            //rainbow
+            delay_strip(all, hue, saturation, brightness);
+            break;
+        case 6:
+            //contrast rainbow
+            delay_strip(left, hue, saturation, brightness);
+            delay_strip(right, hue+128, saturation, brightness);
+            break;
+        default:
+            animation = 0;
+    }
 
-    //kinda raver plaid-ish, gives a mostly white appearance
-    //delay_strip_and_pixel(all, hue, saturation, brightness, 10, 67);
+    if (party_hard_blink > 0) {
+        if (party_hard_count == 0) {
+            if (party_hard_color == party_on) {
+                party_hard_color = party_off;
+            } else {
+                party_hard_color = party_on;
+            }
+            party_hard_count = party_speed;
+            party_hard_blink--;
+        } else {
+            party_hard_count--;
+        }
+        if (party_hard_color == party_on) {
+            write_group(all, party_hard_color);
+        }
+    }
 
-    //delay_strip(all, hue, saturation, brightness);
-    //kind of sparkly
-    //write_pixel(all, rand_strip, rand_pixel, CRGB::White);
-    
-    //random strips
-    //write_strip(all.strips[rand_strip], CHSV(random(0,255), 255, 255));
+    int street_button_state = digitalRead(street_button);
+    if (street_button_state == HIGH and street_lock == false) {
+        street_lock = true;
+        street_state++;
+    }
+    if (street_button_state == LOW) {
+        street_lock = false;
+    }
 
-    //delay_strip(left, hue, saturation, brightness);
-    //delay_strip(right, hue+128, saturation, brightness);
-    //write_strip(rear_tire, CHSV(hue+42, saturation, brightness));
+    switch (street_state) {
+        case 0:
+            write_group(headlights, CRGB::Black);
+            write_group(brake, CRGB::Black);
+            tail_color = tail_off;
+            break;
+        case 1:
+            write_group(headlights, CRGB(dim,dim,dim));
+            write_group(brake, CRGB(dim,0,0));
+            write_turn(headlight_left, 2, CRGB::Black);
+            write_turn(headlight_right, 2, CRGB::Black);
+            break;
+        case 2:
+            write_group(headlights, CRGB::White);
+            write_group(brake, CRGB::Red);
+            write_turn(headlight_left, 2, CRGB::Black);
+            write_turn(headlight_right, 2, CRGB::Black);
+            break;
+        case 3:
+            //do nothing so animations take over
+            break;
+        default:
+            street_state = 0;
 
-    //write_group(all, CRGB::White);
-    write_group(brake, CRGB::Red);
-    write_group(headlights, CRGB::White);
+    }
 
-    CRGB turn_color = CRGB::DarkOrange;
+    int animation_button_state = digitalRead(animation_button);
+    if (animation_button_state == HIGH and animation_lock == false) {
+        animation_lock = true;
+        animation++;
+    }
+    if (animation_button_state == LOW) {
+        animation_lock = false;
+    }
 
-    left_headlight.pixels[left_headlight_length-1] = turn_color;
-    left_headlight.pixels[left_headlight_length-2] = turn_color;
-    right_headlight.pixels[right_headlight_length-1] = turn_color;
-    right_headlight.pixels[right_headlight_length-2] = turn_color;
+    if (digitalRead(party_hard_button) == HIGH) {
+        party_hard_blink = party_blinks;
+        party_hard_count = party_speed;
+        party_hard_color = party_off;
+    }
+
+    if (digitalRead(turn_left_button) == HIGH) {
+        turn_left_blink = turn_blinks;
+        turn_left_count = turn_speed;
+        turn_left_color = turn_on;
+    }
+
+    if (digitalRead(turn_right_button) == HIGH) {
+        turn_right_blink = turn_blinks;
+        turn_right_count = turn_speed;
+        turn_right_color = turn_on;
+    }
+
+    if (turn_right_blink > 0) {
+        if (turn_right_count == 0) {
+            if (turn_right_color == turn_on) {
+                turn_right_color = CRGB::Black;
+            } else {
+                turn_right_color = turn_on;
+            }
+            turn_right_count = turn_speed;
+            turn_right_blink--;
+        } else {
+            turn_right_count--;
+        }
+    }
+
+    if (turn_left_blink > 0) {
+        if (turn_left_count == 0) {
+            if (turn_left_color == turn_on) {
+                turn_left_color = CRGB::Black;
+            } else {
+                turn_left_color = turn_on;
+            }
+            turn_left_count = turn_speed;
+            turn_left_blink--;
+        } else {
+            turn_left_count--;
+        }
+    }
+
+    //write turn signals
+    if (turn_left_color == turn_on) {
+        write_turn(headlight_left, 2, turn_left_color);
+        write_turn(tail_left, 2, turn_left_color);
+    }
+
+    if (turn_right_color == turn_on) {
+        write_turn(headlight_right, 2, turn_right_color);
+        write_turn(tail_right, 2, turn_right_color);
+    }
 
     FastLED.show(); 
     delay(10);
+}
+
+void write_turn(Strip strip, int count, CRGB color) {
+    for (int i=1; i<=count; i++) {
+        strip.pixels[strip.length-i] = color;
+    }
 }
 
 void write_blinky_white() {
