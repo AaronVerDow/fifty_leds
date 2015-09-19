@@ -229,6 +229,14 @@ void setup() {
 
 
     delay(1000); 
+
+    //do something on power up
+    turn_left_blink = turn_blinks;
+    turn_left_count = turn_speed;
+    turn_left_color = turn_on;
+    turn_right_blink = turn_blinks;
+    turn_right_count = turn_speed;
+    turn_right_color = turn_on;
 }
 
 void loop() { 
