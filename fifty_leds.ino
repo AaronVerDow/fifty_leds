@@ -2,11 +2,11 @@
 #include "datastructures.h"
 #include "led_data.h"
 
-const int turn_left_button = 28;
-const int turn_right_button = 25;
-const int safety_button = 27;
+const int turn_left_button = 25;
+const int turn_right_button = 28;
+const int safety_button = 24;
 const int animation_button = 26;
-const int party_hard_button = 24;
+//const int party_hard_button = 27;
 
 int hue = 0;
 int saturation = 255;
@@ -53,7 +53,7 @@ Cycle_Actions safety = {safety_button, 0, false};
 void setup() {
     led_data_setup();
 
-    pinMode(party_hard_button, INPUT);
+    //pinMode(party_hard_button, INPUT);
     pinMode(animation_button, INPUT);
     pinMode(safety_button, INPUT);
     pinMode(turn_right_button, INPUT);
@@ -124,9 +124,9 @@ void write_animation() {
 }
 
 void write_party() {
-    if (digitalRead(party_hard_button) == HIGH) {
-        party_hard_blink = party_blinks;
-    }
+    //if (digitalRead(party_hard_button) == HIGH) {
+        //party_hard_blink = party_blinks;
+    //}
 
     if (party_hard_blink > 0) {
         if (party_hard_count == 0) {
@@ -156,18 +156,29 @@ void write_safety() {
             tail_color = tail_off;
             break;
         case 1:
-            write_group(headlights, CRGB(dim,dim,dim));
-            write_group(brake, CRGB(dim,0,0));
-            write_turn(headlight_left, 2, CRGB::Black);
-            write_turn(headlight_right, 2, CRGB::Black);
+            //this number above needs to be changed in turn
+            write_group(mega_headlights, CRGB::White);
+            write_group(mega_brake, CRGB::Red);
+            write_strip(fork_left, CRGB(dim,dim,dim));
+            write_strip(fork_right, CRGB(dim,dim,dim));
+            write_end(headlight_left, 2, turn_on);
+            write_end(headlight_right, 2, turn_on);
+            write_strip(tail_left, turn_on);
+            write_strip(tail_right, turn_on);
             break;
         case 2:
-            write_group(headlights, CRGB::White);
-            write_group(brake, CRGB::Red);
-            write_turn(headlight_left, 2, CRGB::Black);
-            write_turn(headlight_right, 2, CRGB::Black);
+            write_group(headlights, CRGB(dim,dim,dim));
+            write_group(brake, CRGB(dim,0,0));
+            write_end(headlight_left, 2, CRGB::Black);
+            write_end(headlight_right, 2, CRGB::Black);
             break;
         case 3:
+            write_group(headlights, CRGB::White);
+            write_group(brake, CRGB::Red);
+            write_end(headlight_left, 2, CRGB::Black);
+            write_end(headlight_right, 2, CRGB::Black);
+            break;
+       case 4:
             //do nothing so animations take over
             break;
         default:
@@ -179,59 +190,100 @@ void write_safety() {
 void write_turn_signals() {
     if (digitalRead(turn_left_button) == HIGH) {
         turn_left_blink = turn_blinks;
-        turn_right_blink = 0;
         turn_right_color = turn_off;
+        turn_right_blink = 0;
     }
 
     if (digitalRead(turn_right_button) == HIGH) {
         turn_right_blink = turn_blinks;
-        turn_left_blink = 0;
         turn_left_color = turn_off;
+        turn_left_blink = 0;
     }
 
     if (turn_right_blink > 0) {
-        if (turn_right_count == 0) {
-            if (turn_right_color == turn_on) {
-                turn_right_color = turn_off;
-            } else {
-                turn_right_color = turn_on;
-            }
-            turn_right_count = turn_speed;
-            turn_right_blink--;
-        } else {
-            turn_right_count--;
-        }
-    } else {
-        turn_right_color = turn_off;
+        blink_right_color();
+        write_right_turn();
     }
 
     if (turn_left_blink > 0) {
-        if (turn_left_count == 0) {
-            if (turn_left_color == turn_on) {
-                turn_left_color = turn_off;
-            } else {
-                turn_left_color = turn_on;
-            }
-            turn_left_count = turn_speed;
-            turn_left_blink--;
+        blink_left_color();
+        write_left_turn();
+    }
+
+}
+
+void blink_left_color() {
+    if (turn_left_count == 0) {
+        if (turn_left_color == turn_on) {
+            turn_left_color = turn_off;
         } else {
-            turn_left_count--;
+            turn_left_color = turn_on;
+            //prevent turn signals being stuck on
+            if (turn_left_blink == 1) {
+                turn_left_blink++;
+            }
         }
+        turn_left_count = turn_speed;
+        turn_left_blink--;
     } else {
-        turn_left_color = turn_off;
-    }
-
-    if (turn_left_color == turn_on) {
-        write_turn(headlight_left, 2, turn_left_color);
-        write_turn(tail_left, 2, turn_left_color);
-    }
-
-    if (turn_right_color == turn_on) {
-        write_turn(headlight_right, 2, turn_right_color);
-        write_turn(tail_right, 2, turn_right_color);
+        turn_left_count--;
     }
 }
 
+void blink_right_color() {
+    if (turn_right_count == 0) {
+        if (turn_right_color == turn_on) {
+            turn_right_color = turn_off;
+        } else {
+            turn_right_color = turn_on;
+            //prevent turn signals being stuck on
+            if (turn_right_blink == 1) {
+                turn_right_blink++;
+            }
+        }
+        turn_right_count = turn_speed;
+        turn_right_blink--;
+    } else {
+        turn_right_count--;
+    }
+}
+
+void write_left_turn() {
+    if (safety.counter == 1) {
+        //mega safe
+        write_end(headlight_left, 2, turn_left_color);
+        write_strip(tail_left, turn_left_color);
+        //if (turn_left_color == turn_on) {
+            write_strip(gas_left, turn_left_color);
+            write_strip(fork_left, turn_left_color);
+            write_strip(chain, turn_left_color);
+            write_strip(swing_left, turn_left_color);
+            write_end(rear_tire, 6, turn_left_color);
+        //}
+    } else {
+        //regular safe
+        write_end(headlight_left, 2, turn_left_color);
+        write_end(tail_left, 2, turn_left_color);
+    }
+}
+
+void write_right_turn() {
+    if (safety.counter == 1) {
+        //mega safe
+        write_end(headlight_right, 2, turn_right_color);
+        write_strip(tail_right, turn_right_color);
+        //if (turn_right_color == turn_on) {
+            write_strip(gas_right, turn_right_color);
+            write_strip(fork_right, turn_right_color);
+            write_strip(swing_right, turn_right_color);
+            write_begin(rear_tire, 6, turn_right_color);
+        //}
+    } else {
+        //regular safe
+        write_end(headlight_right, 2, turn_right_color);
+        write_end(tail_right, 2, turn_right_color);
+    }
+}
 void check_for_button_presses(Cycle_Actions &action) {
     if (digitalRead(action.button) == HIGH) {
         if (action.lock == false) {
@@ -244,9 +296,15 @@ void check_for_button_presses(Cycle_Actions &action) {
 }
 
 
-void write_turn(Strip strip, int count, CRGB color) {
+void write_end(Strip strip, int count, CRGB color) {
     for (int i=1; i<=count; i++) {
         strip.pixels[strip.length-i] = color;
+    }
+}
+
+void write_begin(Strip strip, int count, CRGB color) {
+    for (int i=0; i<count; i++) {
+        strip.pixels[i] = color;
     }
 }
 

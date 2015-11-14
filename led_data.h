@@ -98,6 +98,13 @@ const int headlights_length = 3;
 Strip headlights_strips[headlights_length];
 Group headlights = {headlights_strips, headlights_length};
 
+const int mega_brake_length = 8;
+Strip mega_brake_strips[mega_brake_length];
+Group mega_brake = {mega_brake_strips, mega_brake_length};
+
+const int mega_headlights_length = 7;
+Strip mega_headlights_strips[mega_headlights_length];
+Group mega_headlights = {mega_headlights_strips, mega_headlights_length};
 
 void led_data_setup() {
     FastLED.addLeds<NEOPIXEL, fork_left_pin>(fork_left_pixels, fork_left_length);
@@ -166,4 +173,21 @@ void led_data_setup() {
     headlights_strips[0] = headlight_left;
     headlights_strips[1] = headlight;
     headlights_strips[2] = headlight_right;
+
+    mega_brake_strips[0] = seat_side_right;
+    mega_brake_strips[1] = seat_side_left;
+    mega_brake_strips[2] = seat_down_right;
+    mega_brake_strips[3] = seat_down_left;
+    mega_brake_strips[4] = swing_right;
+    mega_brake_strips[5] = swing_left;
+    mega_brake_strips[6] = rear_tire;
+    mega_brake_strips[7] = chain;
+
+    mega_headlights_strips[0] = headlight_left;
+    mega_headlights_strips[1] = headlight;
+    mega_headlights_strips[2] = headlight_right;
+    mega_headlights_strips[3] = fender_left;
+    mega_headlights_strips[4] = fender_right;
+    mega_headlights_strips[5] = gas_left;
+    mega_headlights_strips[6] = gas_right;
 }
